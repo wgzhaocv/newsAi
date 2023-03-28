@@ -1,5 +1,7 @@
 const axios = require("axios");
 const cheerio = require("cheerio");
+const moment = require("moment");
+const now = moment();
 
 const url = "https://news.yahoo.co.jp/topics/top-picks?page=";
 const headers = {
@@ -13,6 +15,7 @@ const newsList = [];
 
 async function getNews() {
   try {
+    const year = now.format("YYYY");
     const promises1 = new Array(4)
       .fill(0)
       .map((_, i) => axios.get(url + (i + 1), { headers }));
@@ -72,7 +75,12 @@ async function getNews() {
         .children(":eq(0)")
         .attr("href");
 
-      urlArticle = urlArticle.includes("baseball") ? undefined : urlArticle;
+      urlArticle =
+        urlArticle.includes("baseball") ||
+        urlArticle.includes("soccer") ||
+        urlArticle.includes("weather")
+          ? undefined
+          : urlArticle;
 
       console.log("urlArticle", promises2[index].urlSummary, urlArticle);
       promises2[index].urlArticle = urlArticle;
@@ -104,12 +112,20 @@ async function getNews() {
         return this.nodeType === 3;
       });
 
-      console.log("\n\ntextNodes\n\n", textNodes);
+      const textArray = Array.from(
+        textNodes.map(function () {
+          return $(this).text().trim();
+        })
+      );
+
+      console.log("\n\ntextNodes\n\n", textArray);
 
       let allText = "";
-      textNodes.each(function () {
+      textArray.each(function () {
         allText += this.textContent;
       });
+
+      const [month, day, hour, min] = dateStr.match(/\d+/g);
 
       newsList.push({
         title: promises2[i].title,
@@ -127,53 +143,4 @@ async function getNews() {
   }
 }
 
-// getNews();
-
 module.exports = getNews;
-
-// for (let i = 1; i <= 4; i++) {
-//   axios.get(url + i).then((res) => {
-//     const $ = cheerio.load(res.data);
-//     $(".newsFeed_item")
-//       .find("a")
-//       .each((index, element) => {
-//         const title = $(element).find(".newsFeed_item_title").text();
-//         const dateTime = $(element).find(".newsFeed_item_date").text();
-//         const urlSummary = $(element).attr("href");
-
-//         axios.get(urlSummary).then((summary) => {
-//           const $ = cheerio.load(summary.data);
-
-//           const urlArticle = $('[data-ual-view-type="digest"]')
-//             .children(":eq(3)")
-//             .children(":eq(0)")
-//             .children(":eq(0)")
-//             .attr("href");
-
-//           axios.get(urlArticle).then((article) => {
-//             const $ = cheerio.load(article.data);
-//             const content = $("[data-ual-view-type='detail']");
-//             const imageLink = content.find('a:contains("【写真ニュース】")');
-//             imageLink.remove();
-
-//             const allChildNodes = content.contents();
-
-//             const textNodes = allChildNodes.filter(function () {
-//               return this.nodeType === 3;
-//             });
-
-//             let allText = "";
-//             textNodes.each(function () {
-//               allText += this.textContent;
-//             });
-
-//             newsList.push({
-//               title,
-//               dateTime,
-//               content: allText,
-//             });
-//           });
-//         });
-//       });
-//   });
-// }
