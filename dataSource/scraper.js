@@ -16,7 +16,7 @@ const newsList = [];
 async function getNews() {
   try {
     const year = now.format("YYYY");
-    const promises1 = new Array(4)
+    const promises1 = new Array(1)
       .fill(0)
       .map((_, i) => axios.get(url + (i + 1), { headers }));
     const results1 = await Promise.all(promises1);
@@ -108,28 +108,33 @@ async function getNews() {
 
       const allChildNodes = content.contents();
 
+
+      console.log("\n\allChildNodes: ", Object.prototype.toString.call(allChildNodes) ,allChildNodes,"\n\n");
+
       const textNodes = allChildNodes.filter(function () {
         return this.nodeType === 3;
       });
 
       const textArray = Array.from(
-        textNodes.map(function () {
-          return $(this).text().trim();
+        textNodes.map((index, element) => {
+          return $(element).text().trim();
         })
       );
 
-      console.log("\n\ntextNodes\n\n", textArray);
+      console.log("\n\textArray: ", textArray,"\n\n");
 
       let allText = "";
-      textArray.each(function () {
-        allText += this.textContent;
+      textArray.forEach((text) => {
+        allText += text;
       });
 
-      const [month, day, hour, min] = dateStr.match(/\d+/g);
+      console.log("\n\allText: ", textArray,"\n\n");
+
+      const [month, day, hour, min] = promises2[i].dateTime.match(/\d+/g);
 
       newsList.push({
         title: promises2[i].title,
-        dateTime: promises2[i].dateTime,
+        dateTime: `${year}-${month}-${day} ${hour}:${min}:00`,
         url: promises2[i].urlArticle,
         content: allText,
       });
