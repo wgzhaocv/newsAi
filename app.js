@@ -7,7 +7,7 @@ async function main() {
   const newsList = await getNews();
   console.log(newsList);
   await connectToDb();
-  newsList && newsList.length > 0 && (await saveNews(newsList));
+  // newsList && newsList.length > 0 && (await saveNews(newsList));
   await closeConnection();
 }
 

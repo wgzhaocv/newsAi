@@ -121,7 +121,7 @@ async function getNews() {
         })
       );
 
-      console.log("\n\textArray: ", textArray,"\n\n");
+      console.log("\n\ntextArray: ", textArray,"\n\n");
 
       let allText = "";
       textArray.forEach((text) => {
