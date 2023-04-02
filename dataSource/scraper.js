@@ -11,12 +11,22 @@ const headers = {
 
 const delay = 1000;
 
+let lastExecutionTime = null;
+const minInterval = 5000; // 5秒（毫秒）
+
 const newsList = [];
 
 async function getNews() {
   try {
+    const currentTime = new Date().getTime();
+
+    if (lastExecutionTime && currentTime - lastExecutionTime < minInterval)
+      return;
+
     const year = now.format("YYYY");
-    const promises1 = new Array(1)
+    const regex = /\([^（）]*\)/g;
+
+    const promises1 = new Array(2)
       .fill(0)
       .map((_, i) => axios.get(url + (i + 1), { headers }));
     const results1 = await Promise.all(promises1);
@@ -108,35 +118,42 @@ async function getNews() {
 
       const allChildNodes = content.contents();
 
-
-      console.log("\n\allChildNodes: ", Object.prototype.toString.call(allChildNodes) ,allChildNodes,"\n\n");
-
-      const textNodes = allChildNodes.filter(function () {
-        return this.nodeType === 3;
-      });
-
-      const textArray = Array.from(
-        textNodes.map((index, element) => {
-          return $(element).text().trim();
-        })
+      console.log(
+        "\nallChildNodes: ",
+        Object.prototype.toString.call(allChildNodes),
+        allChildNodes,
+        "\n\n"
       );
+      // 创建一个递归函数，用于提取所有文本
+      function extractText(element) {
+        let result = "";
 
-      console.log("\n\ntextArray: ", textArray,"\n\n");
+        element.each((index, el) => {
+          if (el.type === "text") {
+            result += el.data;
+          } else if (el.type === "tag") {
+            result += extractText($(el).contents());
+          }
+        });
 
-      let allText = "";
-      textArray.forEach((text) => {
-        allText += text;
-      });
+        return result;
+      }
 
-      console.log("\n\allText: ", textArray,"\n\n");
+      // 使用 extractText 函数提取所有文本
+      const allText = extractText(allChildNodes);
+
+      console.log("\nallText: ", allText, "\n\n");
+
+      const regexText = allText.replace(regex, "");
 
       const [month, day, hour, min] = promises2[i].dateTime.match(/\d+/g);
 
       newsList.push({
+        id: promises2[i].urlSummary.split("/").at(-1),
         title: promises2[i].title,
         dateTime: `${year}-${month}-${day} ${hour}:${min}:00`,
         url: promises2[i].urlArticle,
-        content: allText,
+        content: regexText,
       });
     });
 

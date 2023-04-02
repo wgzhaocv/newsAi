@@ -14,6 +14,7 @@ async function connectToDb() {
   try {
     // 连接到MongoDB
     await client.connect();
+    console.log("Connected to the MongoDB.");
 
     // 选择数据库和集合
     db = client.db("news_database"); // 替换 'news_database' 为你的数据库名称
@@ -39,6 +40,7 @@ async function saveNews(newsList) {
     console.log(
       `Inserted ${result.insertedCount} documents into the news collection.`
     );
+    return result;
   } catch (err) {
     console.error("Error:", err);
   }
