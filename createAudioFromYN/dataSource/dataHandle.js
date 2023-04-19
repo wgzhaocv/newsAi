@@ -2,17 +2,19 @@ const getNews = require("../dataSource/scraper");
 const {
   saveNews,
   findBycondition,
-  findAll,
   getLast10,
   updateNews,
-} = require("./dbIO");
-const { generateScript } = require("../dataSource/chatgptModify");
+  getNewsWithin24Hours,
+  getNewsByIds
+} = require("../../db/dbIO");
+const { generateScript } = require("./chatgptModify");
 const { getAduioFromText } = require("../tts/textToSpeech");
 const moment = require("moment");
 
 // get data, if failed try one more time, max 10 times
-async function getAndSaveData() {
+async function getAndSaveData(useChatGPT = false) {
   try {
+    if (!useChatGPT) return 0;
     let newsList = await getNews();
     console.log(newsList);
     if (newsList && newsList.length > 0) {
@@ -22,37 +24,43 @@ async function getAndSaveData() {
 
       let newData = newsList.filter((item) => !existingIds.includes(item.id));
 
-      // const modifiedDataPromises = newData.map(async (item) => {
-      //   return {
-      //     ...item,
-      //     modifiedText: item.content
-      //       ? await generateScript(item.content)
-      //       : undefined,
-      //   };
-      // });
+      const modifiedDataPromises = newData.map(async (item) => {
+        return {
+          ...item,
+          modifiedText: item.content
+            ? await generateScript(item.content)
+            : undefined,
+        };
+      });
 
-      //  newData = await Promise.all(modifiedDataPromises);
+      newData = await Promise.all(modifiedDataPromises);
 
       console.log(newData);
 
-      // const saveResult = await saveNews(newData);
-      // console.log(newData.length, " rows newData inserted");
-      // return saveResult;
+      const newsTarget = newData.filter((item) => item.modifiedText);
+      const saveResult = await saveNews(newsTarget);
+      console.log(newData.length, " rows newData inserted");
+      return { saveResult, newsTarget };
     }
   } catch (error) {
     console.log(error);
   }
 }
 
-async function textToAudios() {
+async function textToAudios(dataIds=[]) {
   try {
-    const last10 = await getLast10();
+    let lastNews=[];
+    if(dataIds.length>0){
+      lastNews = await getNewsByIds(dataIds);
+    }else {
+      lastNews = await getNewsWithin24Hours();
+    }
+    // const lastNews = await getLast10();
     console.log("text to audios");
-    const toSpeechPromises = last10.map((item) => {
+    const toSpeechPromises = lastNews.map((item) => {
       return getAduioFromText(item.modifiedText, item.id);
     });
 
-    // const toSpeechPromises = [getAduioFromText(last10[0].modifiedText, last10[0].id)];
     const speachResult = await Promise.all(toSpeechPromises);
 
     const newLast10 = last10.map((item, index) => {
@@ -60,7 +68,7 @@ async function textToAudios() {
         return {
           ...item,
           audio: speachResult[index],
-        }; 
+        };
       }
       return item;
     });
@@ -70,28 +78,28 @@ async function textToAudios() {
     );
 
     console.log(updateResult.modifiedCount, " rows updated");
+    
   } catch (error) {
     console.log(error);
   }
 }
 
-
-const resetMyDB=async ()=>{
-  const last10=await getLast10();
-  const last10_2=last10.map(item=>{
-    if(typeof item.dateTime==="string"){
-      item.publishDateTime=moment(item.dateTime, "YYYY:M:D H:mm:ss").toDate();
+const resetMyDB = async () => {
+  const last10 = await getLast10();
+  const last10_2 = last10.map((item) => {
+    if (typeof item.dateTime === "string") {
+      item.publishDateTime = moment(item.dateTime, "YYYY:M:D H:mm:ss").toDate();
     }
-    const newItem={...item};
+    const newItem = { ...item };
     delete newItem.dateTime;
     return newItem;
-  })
+  });
 
   console.log(last10_2);
-  console.log("\n\n>>>>",last10_2[0]);
+  console.log("\n\n>>>>", last10_2[0]);
   updateNews(last10_2);
-}
+};
 
 module.exports.getAndSaveData = getAndSaveData;
 module.exports.textToAudios = textToAudios;
-module.exports.resetMyDB=resetMyDB;
+module.exports.resetMyDB = resetMyDB;

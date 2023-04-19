@@ -25,20 +25,15 @@ async function generateScript(paraph) {
     const completion = await openai.createChatCompletion({
       model: "gpt-3.5-turbo",
       messages: [{ role: "user", content: prompt_origin + paraph }],
+      max_tokens: 500,
     });
     console.log(completion.data.choices[0].message);
     return completion.data.choices[0].message.content;
   } catch (error) {
     if (error.response) {
       console.error(error.response.status, error.response.data);
-    //   res.status(error.response.status).json(error.response.data);
     } else {
       console.error(`Error with OpenAI API request: ${error.message}`);
-    //   res.status(500).json({
-    //     error: {
-    //       message: "An error occurred during your request.",
-    //     },
-    //   });
     }
   }
 }

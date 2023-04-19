@@ -1,7 +1,5 @@
 const sdk = require("microsoft-cognitiveservices-speech-sdk");
 const fs = require("fs");
-const { AudioContext } = require("web-audio-api");
-const toWav = require("audiobuffer-to-wav");
 
 let speechConfig = sdk.SpeechConfig.fromSubscription(
   process.env.SPEECH_KEY,
@@ -43,8 +41,9 @@ const greetings = [
 
 const getAduioFromText = async (text, id) => {
   let fileName = process.env.AUDIO_PATH + id + ".wav";
+  const fileNameConverted = process.env.AUDIO_PATH + "convertedWav/"+ id + ".wav";
 
-  if (fs.existsSync(fileName)) {
+  if (fs.existsSync(fileName)||fs.existsSync(fileNameConverted)) {
     return fileName;
   }
 

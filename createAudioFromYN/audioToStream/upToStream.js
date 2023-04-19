@@ -5,14 +5,14 @@ const {
   getNewsByIds,
   getNewsWithin24Hours,
   updateNews,
-} = require("../db/dbIO");
+} = require("../../db/dbIO");
 
 async function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 let loopNewsFlag = true;
-const hlsPathNews = process.env.HLS_PATH_NEWS+'/output.m3u8'; // 更改为实际的HLS输出目录
+const hlsPathNews = process.env.HLS_PATH_NEWS + "/output.m3u8"; // 更改为实际的HLS输出目录
 
 const aacPath = process.env.AUDIO_PATH + "aac/";
 const wavPath = process.env.AUDIO_PATH + "convertedWav/";
@@ -102,7 +102,7 @@ const convertAllWaveToAAC = async () => {
 };
 
 // upload to nginx HLS
-const uploadToNginxHLS = async () => {
+const uploadNewToNginxHLS = async () => {
   try {
     const news = await getNewsWithin24Hours();
     const newsIds = news.map((item) => item.id);
@@ -115,7 +115,7 @@ const uploadToNginxHLS = async () => {
 
     const AudioList = aacs.map((file) => aacPath + file);
 
-    console.log(AudioList,dingPath);
+    console.log(AudioList, dingPath);
     for (const audioPath of AudioList) {
       try {
         await new Promise((resolve, reject) => {
@@ -137,7 +137,11 @@ const uploadToNginxHLS = async () => {
             })
             .save(hlsPathNews);
         });
+      } catch (error) {
+        console.log(error);
+      }
 
+      try {
         console.log("audioPath playing: ", audioPath);
         await new Promise((resolve, reject) => {
           ffmpeg(audioPath)
@@ -174,4 +178,4 @@ const uploadToNginxHLS = async () => {
 };
 
 module.exports.convertAllWaveToAAC = convertAllWaveToAAC;
-module.exports.uploadToNginxHLS = uploadToNginxHLS;
+module.exports.uploadNewToNginxHLS = uploadNewToNginxHLS;

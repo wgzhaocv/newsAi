@@ -5,8 +5,9 @@ const { Server } = require("socket.io");
 const cron = require("node-cron");
 
 const { connectToDb, closeConnection } = require("./db/dbIO");
-const { getAndSaveData, textToAudios ,resetMyDB} = require("./db/dataHandle");
-const { convertAllWaveToAAC,uploadToNginxHLS } = require("./audioToStream/upToStream");
+const { getAndSaveData, textToAudios ,resetMyDB} = require("./createAudioFromYN/dataSource/dataHandle");
+const { uploadNewToNginxHLS } = require("./createAudioFromYN/audioToStream/upToStream");
+const {generateNewsFromYN} = require("./createAudioFromYN/newsGenerator");
 
 // 创建 Express 应用
 const app = express();
@@ -19,7 +20,8 @@ app.get("/", (req, res) => {
   // getAndSaveData();
   //textToAudios();
   // convertAllWaveToAAC();
-  uploadToNginxHLS();
+  uploadNewToNginxHLS();
+  // generateNewsFromYN();
   // resetMyDB();
 
   res.send("Hello World!");
