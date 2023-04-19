@@ -5,7 +5,8 @@ const { Server } = require("socket.io");
 const cron = require("node-cron");
 
 const { connectToDb, closeConnection } = require("./db/dbIO");
-const { getAndSaveData } = require("./db/dataHandle");
+const { getAndSaveData, textToAudios ,resetMyDB} = require("./db/dataHandle");
+const { convertAllWaveToAAC,uploadToNginxHLS } = require("./audioToStream/upToStream");
 
 // 创建 Express 应用
 const app = express();
@@ -15,7 +16,11 @@ app.use(cors());
 app.get("/", (req, res) => {
   console.log("Hello World!");
 
-  getAndSaveData();
+  // getAndSaveData();
+  //textToAudios();
+  // convertAllWaveToAAC();
+  uploadToNginxHLS();
+  // resetMyDB();
 
   res.send("Hello World!");
 });
@@ -30,6 +35,7 @@ const server = app.listen(3000, async () => {
     await connectToDb();
     // 设置一个每天每隔半小时（0 分和 30 分）执行的任务
     // cron.schedule("0,30 * * * *", getAndSaveData);
+    // cron.schedule("*/3 * * * *", getAndSaveData);
   } catch (error) {
     process.exit(1);
   }

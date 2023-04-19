@@ -24,9 +24,10 @@ async function getNews() {
       return;
 
     const year = now.format("YYYY");
-    const regex = /\([^（）]*\)/g;
 
-    const promises1 = new Array(2)
+    const regex = /（[^）]*）/g;
+
+    const promises1 = new Array(1)
       .fill(0)
       .map((_, i) => axios.get(url + (i + 1), { headers }));
     const results1 = await Promise.all(promises1);
@@ -86,9 +87,9 @@ async function getNews() {
         .attr("href");
 
       urlArticle =
-        urlArticle.includes("baseball") ||
-        urlArticle.includes("soccer") ||
-        urlArticle.includes("weather")
+        urlArticle?.includes("baseball") ||
+        urlArticle?.includes("soccer") ||
+        urlArticle?.includes("weather")
           ? undefined
           : urlArticle;
 
@@ -118,12 +119,12 @@ async function getNews() {
 
       const allChildNodes = content.contents();
 
-      console.log(
-        "\nallChildNodes: ",
-        Object.prototype.toString.call(allChildNodes),
-        allChildNodes,
-        "\n\n"
-      );
+      // console.log(
+      //   "\nallChildNodes: ",
+      //   Object.prototype.toString.call(allChildNodes),
+      //   allChildNodes,
+      //   "\n\n"
+      // );
       // 创建一个递归函数，用于提取所有文本
       function extractText(element) {
         let result = "";
@@ -142,16 +143,22 @@ async function getNews() {
       // 使用 extractText 函数提取所有文本
       const allText = extractText(allChildNodes);
 
-      console.log("\nallText: ", allText, "\n\n");
+      // console.log("\nallText: ", allText, "\n\n");
 
-      const regexText = allText.replace(regex, "");
+      const regexText = allText.replace(regex, "").replace(/\n+/g, "\n");
 
       const [month, day, hour, min] = promises2[i].dateTime.match(/\d+/g);
 
       newsList.push({
         id: promises2[i].urlSummary.split("/").at(-1),
         title: promises2[i].title,
-        dateTime: `${year}-${month}-${day} ${hour}:${min}:00`,
+        publishDateTime: moment({
+          year,
+          month: month - 1,
+          day,
+          hour,
+          minutes: min,
+        }).toDate(),
         url: promises2[i].urlArticle,
         content: regexText,
       });
