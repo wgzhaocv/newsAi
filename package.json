@@ -25,6 +25,7 @@
     "nodemon": "^2.0.22",
     "openai": "^3.2.1",
     "socket.io": "^4.6.1",
-    "web-audio-api": "^0.2.2"
+    "web-audio-api": "^0.2.2",
+    "ytdl-core": "^4.11.4"
   }
 }

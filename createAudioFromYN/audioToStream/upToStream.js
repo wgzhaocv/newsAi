@@ -6,6 +6,7 @@ const {
   getNewsWithin24Hours,
   updateNews,
 } = require("../../db/dbIO");
+const { aduioToAAc,createDirectoryIfNotExists } = require("../../utils");
 
 async function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -17,29 +18,6 @@ const hlsPathNews = process.env.HLS_PATH_NEWS + "/output.m3u8"; // 更改为实�
 const aacPath = process.env.AUDIO_PATH + "aac/";
 const wavPath = process.env.AUDIO_PATH + "convertedWav/";
 const dingPath = process.env.AUDIO_PATH + "soundEffect/" + "ding.aac";
-
-function createDirectoryIfNotExists(path) {
-  return new Promise((resolve, reject) => {
-    fs.mkdir(path, { recursive: true }, (err) => {
-      if (err && err.code !== "EEXIST") {
-        reject(err);
-        return;
-      }
-      resolve();
-    });
-  });
-}
-
-const wavToAAc = async (inputFile, outputFile) => {
-  return new Promise((resolve, reject) => {
-    ffmpeg(inputFile)
-      .output(outputFile)
-      .audioCodec("aac")
-      .on("end", () => resolve("success"))
-      .on("error", (err) => reject(err))
-      .run();
-  });
-};
 
 const convertAllWaveToAAC = async () => {
   try {
@@ -64,7 +42,7 @@ const convertAllWaveToAAC = async () => {
 
       const outputFile =
         process.env.AUDIO_PATH + "aac/" + path.basename(file, ".wav") + ".aac";
-      return wavToAAc(inputFile, outputFile);
+      return aduioToAAc(inputFile, outputFile);
     });
 
     await Promise.all(convertPromises);

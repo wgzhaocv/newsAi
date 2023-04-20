@@ -2,24 +2,30 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const { Server } = require("socket.io");
-const cron = require("node-cron");
+const ytRouter = require("./createAudioFromYTB/YTBHandler");
 
 const { connectToDb, closeConnection } = require("./db/dbIO");
-const { getAndSaveData, textToAudios ,resetMyDB} = require("./createAudioFromYN/dataSource/dataHandle");
-const { uploadNewToNginxHLS } = require("./createAudioFromYN/audioToStream/upToStream");
-const {generateNewsFromYN} = require("./createAudioFromYN/newsGenerator");
+const { resetMyDB } = require("./createAudioFromYN/dataSource/dataHandle");
+const {
+  uploadNewToNginxHLS,
+} = require("./createAudioFromYN/audioToStream/upToStream");
+const { generateNewsFromYN } = require("./createAudioFromYN/newsGenerator");
 
 // 创建 Express 应用
 const app = express();
 app.use(cors());
 
+// 使用JSON解析中间件
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+
+// 使用API路由
+app.use('/yt', ytRouter);
+
+
 // 设置路由
 app.get("/", (req, res) => {
-  console.log("Hello World!");
-
-  // getAndSaveData();
-  //textToAudios();
-  // convertAllWaveToAAC();
   uploadNewToNginxHLS();
   // generateNewsFromYN();
   // resetMyDB();
