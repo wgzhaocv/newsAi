@@ -37,9 +37,9 @@ app.get("/", (req, res) => {
 app.use(express.static("public"));
 
 // 启动 HTTP 服务器
-const server = app.listen(3000, async () => {
+const server = app.listen(process.env.PORT, async () => {
   try {
-    console.log("Express server listening on port 3000");
+    console.log("Express server listening on port "+process.env.PORT);
     await connectToDb();
     // 设置一个每天每隔半小时（0 分和 30 分）执行的任务
     // cron.schedule("0,30 * * * *", getAndSaveData);

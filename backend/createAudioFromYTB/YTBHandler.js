@@ -6,8 +6,12 @@ const { aduioToAAc, createDirectoryIfNotExists } = require("../utils");
 
 const orgPath = process.env.YTB_AUDIO_PATH + "original/";
 const aacPath = process.env.YTB_AUDIO_PATH + "aac/";
+const aacStaticPath = "songs/YT/aac/";
+const aacSourcePath =
+  process.env.SERVER + ":" + process.env.PORT + "/" + aacStaticPath;
 
-const downloadAndConvert = async (format, srcFile, dstFile) => {
+const downloadAndConvert = async (info, format, srcFile, dstFile) => {
+  console.log("开始下载", format, srcFile, dstFile);
   return new Promise((resolve, reject) => {
     ytdl
       .downloadFromInfo(info, { format })
@@ -44,7 +48,6 @@ router.post("/ytdl", async (req, res) => {
       console.error("目录创建失败：", err)
     );
 
-    // const info = await ytdl.getInfo(path);
     const info = await ytdl.getInfo(path);
 
     const formats = info.formats
@@ -68,11 +71,19 @@ router.post("/ytdl", async (req, res) => {
     const srcFile = `${orgPath}${videoTitle}.${fileExtension}`;
     const dstFile = `${aacPath}${videoTitle}.aac`;
 
-    await downloadAndConvert(bestAudioFormat, srcFile, dstFile);
+    if (fs.existsSync(dstFile)) {
+      console.log("文件已存在");
+      res.send({ audioUrl: aacSourcePath + videoTitle + ".aac" });
+      return;
+    }
 
-    res.send(dstFile);
+    await downloadAndConvert(info, bestAudioFormat, srcFile, dstFile);
+    console.log("转换完成");
+
+    res.send({ audioUrl: aacSourcePath + videoTitle + ".aac" });
   } catch (error) {
-    res.send("");
+    console.log(error);
+    res.send({ audioUrl: "", filename: videoTitle + ".aac" });
   }
 });
 

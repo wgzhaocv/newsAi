@@ -2,3 +2,4 @@
 .env
 /audios
 .DS_Store
+./public/songs
